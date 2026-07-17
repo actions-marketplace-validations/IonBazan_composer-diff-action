@@ -24,26 +24,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Required to make it possible to compare with PR base branch
 
       - name: Generate composer diff
         id: composer_diff # To reference the output in comment
-        uses: IonBazan/composer-diff-action@v1
+        uses: IonBazan/composer-diff-action@v2
 
       - uses: marocchino/sticky-pull-request-comment@v2
         # An empty diff result will break this action.
         if: ${{ steps.composer_diff.outputs.composer_diff_exit_code != 0 }}
         with:
-          header: composer-diff # Creates a collapsed comment with the report
-          message: |
-            <details>
-            <summary>Composer package changes</summary>
-
-            ${{ steps.composer_diff.outputs.composer_diff }}
-
-            </details>
+          header: composer-diff
+          message: ${{ steps.composer_diff.outputs.composer_diff }}
 ```
 
 ## Inputs
@@ -56,7 +50,7 @@ This action takes same input arguments as the [composer-diff command](https://gi
 - `target` - target (new) `composer.lock` path and/or git reference - default: `composer.lock` (current file version)
 
   Follows same convention as `base` argument
-- `format` - output format - either `mdtable`, `mdlist` or `json` - see [composer-diff documentation](https://github.com/IonBazan/composer-diff#usage) - default: `mdtable`
+- `format` - output format - either `mdtable`, `mdlist`, `json`, `github`, or `pr` - see [composer-diff documentation](https://github.com/IonBazan/composer-diff#usage) - default: `pr`
 - `strict` - returns non-zero exit code if there are any changes - default: `false`
 - `no-dev` - excludes dev dependencies - default: `false`
 - `no-prod` - excludes prod dependencies - default: `false`
@@ -64,7 +58,15 @@ This action takes same input arguments as the [composer-diff command](https://gi
 - `with-platform` - include platform (`php`, `ext-*`) dependencies - default: `false`
 - `with-links` - adds compare/release URLs - default: `false`
 - `with-licenses` - adds license information - default: `false`
-- `extra-arguments` - additional arguments to be passed to the command - default: `--ansi` (for colorful output)
+- `filter` - limit output to packages matching glob pattern(s), one per line - default: none
+
+  ```yaml
+  filter: |
+    symfony/*
+    doctrine/*
+  ```
+- `sort` - sort packages by `name` (default) or `operation` - default: none (uses composer-diff default)
+- `extra-arguments` - additional arguments to be passed to the command - default: `--no-ansi`
 
 ## Outputs
 
@@ -84,7 +86,7 @@ You may reference it using:
 steps:
   - name: Generate composer diff
     id: composer_diff
-    uses: IonBazan/composer-diff-action@v1
+    uses: IonBazan/composer-diff-action@v2
   - uses: foo/bar@v1
     with:
       diff: ${{ steps.composer_diff.outputs.composer_diff }}
@@ -99,7 +101,7 @@ To prevent this from happening, set `base` parameter to `HEAD` (or any other git
 ```yml
       - name: Generate composer diff
         id: composer_diff # To reference the output in comment
-        uses: IonBazan/composer-diff-action@v1
+        uses: IonBazan/composer-diff-action@v2
         with: 
           base: HEAD
           no-dev: true

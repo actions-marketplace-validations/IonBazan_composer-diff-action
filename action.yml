@@ -14,9 +14,9 @@ inputs:
     required: true
     default: 'composer.lock'
   format:
-    description: 'Output format (mdtable, mdlist, json)'
+    description: 'Output format (mdtable, mdlist, json, github, pr)'
     required: true
-    default: 'mdtable'
+    default: 'pr'
   strict:
     description: 'Exit with non-zero status code if there are any changes'
     required: false
@@ -37,6 +37,12 @@ inputs:
     required: false
   with-licenses:
     description: 'Include license information'
+    required: false
+  filter:
+    description: 'Limit output to packages matching given glob pattern(s), one per line'
+    required: false
+  sort:
+    description: 'Sort packages by name or operation'
     required: false
   extra-arguments:
     description: 'Additional arguments passed to composer diff command'
@@ -61,4 +67,5 @@ runs:
     - ${{ inputs.with-links && '--with-links' || '' }}
     - ${{ inputs.with-licenses && '--with-licenses' || '' }}
     - ${{ inputs.strict && '--strict' || '' }}
+    - ${{ inputs.sort && format('--sort={0}', inputs.sort) || '' }}
     - ${{ inputs.extra-arguments }}
